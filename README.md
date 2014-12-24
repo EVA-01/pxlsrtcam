@@ -20,10 +20,3 @@ Pixel sort webcam feed.
 
 * `seconds` — Interval in seconds between webcam capture.
 * `maxSeconds` — Maximum number of seconds to run the program. Can remove the `while` loop below and replace with `while(true) {` to run indefinitely.
-
-## To run
-
-*While in pxlsrtcam's parent directory...*
-```
-$ java -jar "pxlsrtcam/dist/pxlsrtcam.jar"
-```
