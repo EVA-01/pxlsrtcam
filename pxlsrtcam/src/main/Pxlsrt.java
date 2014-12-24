@@ -23,7 +23,10 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -46,29 +49,79 @@ public class Pxlsrt {
         "-m cyan",
         "-m magenta",
         "-m hue",
+        "-m hue -s",
         "-m saturation",
         "-m brightness",
         "-m random",
         "-m luma",
-        "-m sum-hsb"
+        "-m sum-hsb",
+        "-m sum-hsb -s",
+        "-m uniqueness",
+        "-m alpha"
     };
-    private final static boolean[] reverse = {true, false};
-    public static void randomPxlsrt(Runtime rt, String input, String output) throws IOException, InterruptedException {
+    private final static boolean[] tORf = {true, false};
+    public static void randomPxlsrt(Runtime rt, String input, String output, Dimension d) throws IOException, InterruptedException {
         String direction = directions[(int)Math.floor(Math.random() * directions.length)];
         String method = methods[(int)Math.floor(Math.random() * methods.length)];
-        boolean doReverse = reverse[(int)Math.floor(Math.random() * reverse.length)];
-        String command = "pxlsrt brute " + input + " " + output + ("".equals(direction) ? "" : " ") + direction + ("".equals(method) ? "" : " ") + method + (doReverse ? " -r" : "");
+        boolean reverse = tORf[(int)Math.floor(Math.random() * tORf.length)];
+        boolean full = tORf[(int)Math.floor(Math.random() * tORf.length)];
+        int min = 0;
+        int max = 0;
+        if(!full) {
+            int length;
+            switch(direction) {
+                case "":
+                    // horizontal
+                    length = (int)d.getWidth();
+                break;
+                case "-v":
+                    // vertical
+                    length = (int)d.getHeight();
+                default:
+                    // diagonal
+                    length = Math.min((int)d.getWidth(), (int)d.getHeight());
+                break;
+            }
+            min = (int)Math.floor(Math.random() * length) + 1;
+            max = (int)Math.floor(Math.random() * length) + 1;
+        }
+        String command = "pxlsrt brute " + input + " " + output + (full ? "" : (" --min " + min + " --max " + max)) + ("".equals(direction) ? "" : " ") + direction + ("".equals(method) ? "" : " ") + method + (reverse ? " -r" : "");
         Process pr = rt.exec(command);
         pr.waitFor();
     }
     public static void main(String[] args) throws IOException, InterruptedException {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Files.deleteIfExists(Paths.get("input.png"));
+                } catch (IOException ex) {
+                    Logger.getLogger(Pxlsrt.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                try {
+                    Files.deleteIfExists(Paths.get("output.png"));
+                } catch (IOException ex) {
+                    Logger.getLogger(Pxlsrt.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }));
         System.out.println("Starting");
         Webcam webcam = Webcam.getDefault();
         Dimension[] sizes = webcam.getViewSizes();
-        Dimension max = sizes[0];
-        for(int i = 1; i < sizes.length; i++) {
-            if(sizes[i].getHeight() * sizes[i].getWidth() >= max.getHeight() * max.getWidth()) {
-                max = sizes[i];
+        Dimension max = null;
+        double mArea = 0;
+        int maxArea = 1000 * 900;
+        for(int i = 0; i < sizes.length; i++) {
+            double cArea = sizes[i].getHeight() * sizes[i].getWidth();
+            if(cArea <= maxArea) {
+                if(max == null) {
+                    max = sizes[i];
+                    mArea = cArea;
+                } else {
+                    if(cArea >= mArea) {
+                        max = sizes[i];
+                        mArea = cArea;
+                    }
+                }
             }
         }
         System.out.println("Dimensions: " + (int)max.getWidth() + "x" + (int)max.getHeight());
@@ -81,12 +134,12 @@ public class Pxlsrt {
         boolean first = true;
         int runs = 0;
         // Interval in seconds
-        double seconds = 2;
+        double seconds = 0;
         // Max amount of seconds until program quits
         double maxSeconds = 60;
-        while(runs < maxSeconds/seconds) {
+        //while(runs < maxSeconds/seconds) {
         // Or run indefinitely
-        // while(true) {
+        while(true) {
             BufferedImage image = webcam.getImage();
             try {
                 ImageIO.write(image, "PNG", new File("input.png"));
@@ -94,7 +147,7 @@ public class Pxlsrt {
                 e.printStackTrace();
                 System.exit(0);
             }
-            randomPxlsrt(rt, "input.png", "output.png");
+            randomPxlsrt(rt, "input.png", "output.png", max);
             BufferedImage img = null;
             try {
                 img = ImageIO.read(new File("output.png"));
