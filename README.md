@@ -1,0 +1,23 @@
+pxlsrtcam
+=========
+
+Pixel sort webcam feed.
+
+## Requirements for running
+
+* [Ruby](https://www.ruby-lang.org/en/)
+* [RubyGems](http://rubygems.org/)
+* [pxlsrt](https://github.com/EVA-01/pxlsrt) ([on RubyGems.org](http://rubygems.org/gems/pxlsrt))
+* Developed in [NetBeans](https://netbeans.org/)
+
+## Variables
+
+* `seconds` — Interval in seconds between webcam capture.
+* `maxSeconds` — Maximum number of seconds to run the program. Can remove the `while` loop below and replace with `while(true) {` to run indefinitely.
+
+## To run
+
+*While in pxlsrtcam's parent directory...*
+```
+$ java -jar "pxlsrtcam/dist/pxlsrtcam.jar"
+```
