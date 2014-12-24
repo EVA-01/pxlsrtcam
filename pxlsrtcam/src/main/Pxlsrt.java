@@ -132,20 +132,21 @@ public class Pxlsrt {
         jLabel.setHorizontalAlignment(JLabel.CENTER);
         jLabel.setVerticalAlignment(JLabel.CENTER);
         boolean first = true;
-        int runs = 0;
         // Interval in seconds
         double seconds = 0;
         // Max amount of seconds until program quits
         double maxSeconds = 60;
-        //while(runs < maxSeconds/seconds) {
+        System.out.println(System.nanoTime()/ 1000000000.0);
+        long start = System.nanoTime();
+        while((System.nanoTime()  - start) / 1000000000.0 < maxSeconds) {
         // Or run indefinitely
-        while(true) {
+        //while(true) {
             BufferedImage image = webcam.getImage();
             try {
                 ImageIO.write(image, "PNG", new File("input.png"));
             } catch(Exception e) {
                 e.printStackTrace();
-                System.exit(0);
+                System.exit(-1);
             }
             randomPxlsrt(rt, "input.png", "output.png", max);
             BufferedImage img = null;
@@ -153,7 +154,7 @@ public class Pxlsrt {
                 img = ImageIO.read(new File("output.png"));
             } catch (Exception e) {
                 e.printStackTrace();
-                System.exit(0);
+                System.exit(1);
             }
             if(first) {
                 JFrame editorFrame = new JFrame("pxlsrt");
@@ -166,12 +167,13 @@ public class Pxlsrt {
                 editorFrame.setLocationRelativeTo(null);
                 editorFrame.setVisible(true);
                 first = false;
+                start = System.nanoTime();
             } else {
                 ImageIcon imageIcon = new ImageIcon(img);
                 jLabel.setIcon(imageIcon);
             }
-            runs++;
             Thread.sleep((long) (seconds * 1000));
         }
+        System.exit(0);
     }
 }
