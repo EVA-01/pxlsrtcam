@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 public class Pxlsrt {
     private BufferedImage original;
     private BufferedImage modified;
+    private double[] sobels = null;
     public Pxlsrt(String path) throws IOException {
         original = ImageIO.read(new File(path));
         modified = deepCopy(original);
@@ -28,13 +29,16 @@ public class Pxlsrt {
         return modified;
     }
     public Pxl pxl(int x, int y) {
-        return new Pxl(modified.getRGB(x, y));
+        if(sobels == null) {
+            return new Pxl(modified.getRGB(x, y));
+        } else {
+            return new Pxl(modified.getRGB(x, y), sobel(x, y));
+        }
     }
     public void pxl(int x, int y, int c) {
         modified.setRGB(x, y, c);
     }
     public void pxl(int x, int y, Pxl c) {
-        
         modified.setRGB(x, y, c.color().getRGB());
     }
     public int width() {
@@ -162,7 +166,35 @@ public class Pxlsrt {
     public static int randomInRange(int min, int max) {
         return (int)Math.floor(Math.random() * (max - min + 1)) + min;
     }
+    public Pxl[][] bands(Pxl[] a, double threshold, boolean absolute) {
+        /* Smart */
+        if(a.length <= 1) {
+            Pxl[][] m = new Pxl[1][];
+            m[0] = a;
+            return m;
+        }
+        ArrayList<Pxl[]> divisions = new ArrayList<Pxl[]>();
+        ArrayList<Pxl> division = new ArrayList<Pxl>();
+        for(int p = 0; p < a.length; p++) {
+            if(division.isEmpty() || ((absolute ? a[p].sobel() : a[p].sobel() - division.get(division.size() - 1).sobel()) <= threshold)) {
+                division.add(a[p]);
+            } else {
+                Pxl[] k = new Pxl[division.size()];
+                divisions.add(division.toArray(k));
+                division = new ArrayList<Pxl>();
+                division.add(a[p]);
+            }
+            if(p == a.length - 1) {
+                Pxl[] k = new Pxl[division.size()];
+                divisions.add(division.toArray(k));
+                division = new ArrayList<Pxl>();
+            }
+        }
+        Pxl[][] r = new Pxl[divisions.size()][];
+        return divisions.toArray(r);
+    }
     public Pxl[][] bands(Pxl[] a, int min, int max) {
+        /* Brute */
         if (min > a.length) {
             min = a.length;
         } else if (min < 1) {
@@ -295,6 +327,92 @@ public class Pxlsrt {
         for(int l = 0; l < lines.length; l++) {
             Pxl[] line = lines[l];
             Pxl[][] bands = bands(line, min, max);
+            Pxl[] newLine = {};
+            for(int b = 0; b < bands.length; b++) {
+                Pxl[] band = bands[b];
+                bands[b] = srt(band, middlate);
+                newLine = concatenate(newLine, bands[b]);
+            }
+            switch(direction) {
+                case "horizontal":
+                    replaceHorizontal(newLine, l);
+                break;
+                case "vertical":
+                    replaceVertical(newLine, l);
+                break;
+                case "diagonal":
+                    replaceDiagonal(newLine, l - height() + 1);
+                break;
+                default:
+                    replaceRDiagonal(newLine, l - height() + 1);
+                break;
+            }
+        }
+    }
+    public double[] sobels() {
+        if(this.sobels == null) {
+            double[] sobels = new double[area()];
+            for(int x = 0; x < width(); x++) {
+                for(int y = 0; y < height(); y++) {
+                    sobels[x + y * width()] = sobel(x, y);
+                }
+            }
+            this.sobels = sobels;
+        }
+        return sobels;
+    }
+    public double sobel(int x, int y) {
+        if(sobels != null) {
+            return sobels[x + y * width()];
+        } else {
+            int[][] sobel_x = {
+                {-1, 0, 1},
+                {-2, 0, 2},
+                {-1, 0, 1}
+            };
+            int[][] sobel_y = {
+                {-1, -2, -1},
+                {0, 0, 0},
+                {1, 2, 1}
+            };
+            if(x != 0 && x != width() - 1 && y != 0 && y != height() - 1) {
+                double t1 = pxl(x - 1, y - 1).grey();
+                double t2 = pxl(x, y - 1).grey();
+                double t3 = pxl(x + 1, y - 1).grey();
+                double t4 = pxl(x - 1, y).grey();
+                double t5 = pxl(x, y).grey();
+                double t6 = pxl(x + 1, y).grey();
+                double t7 = pxl(x - 1, y + 1).grey();
+                double t8 = pxl(x, y + 1).grey();
+                double t9 = pxl(x + 1, y + 1).grey();
+                double pixel_x = sobel_x[0][0] * t1 + sobel_x[0][1] * t2 + sobel_x[0][2] * t3 + sobel_x[1][0] * t4 + sobel_x[1][1] * t5 + sobel_x[1][2] * t6 + sobel_x[2][0] * t7 + sobel_x[2][1] * t8 + sobel_x[2][2] * t9;
+		double pixel_y = sobel_y[0][0] * t1 + sobel_y[0][1] * t2 + sobel_y[0][2] * t3 + sobel_y[1][0] * t4 + sobel_y[1][1] * t5 + sobel_y[1][2] * t6 + sobel_y[2][0] * t7 + sobel_y[2][1] * t8 + sobel_y[2][2] * t9;
+                return Math.sqrt(pixel_x * pixel_x + pixel_y * pixel_y);
+            } else {
+                return 0;
+            }
+        }
+    }
+    public void smart(double threshold, boolean absolute, String direction, String method, boolean reverse, int middlate) {
+        sobels();
+        Pxl[][] lines;
+        switch(direction) {
+            case "horizontal":
+                lines = horizontalLines(method, reverse);
+            break;
+            case "vertical":
+                lines = verticalLines(method, reverse);
+            break;
+            case "diagonal":
+                lines = diagonalLines(method, reverse);
+            break;
+            default:
+                lines = rDiagonalLines(method, reverse);
+            break;
+        }
+        for(int l = 0; l < lines.length; l++) {
+            Pxl[] line = lines[l];
+            Pxl[][] bands = bands(line, threshold, absolute);
             Pxl[] newLine = {};
             for(int b = 0; b < bands.length; b++) {
                 Pxl[] band = bands[b];

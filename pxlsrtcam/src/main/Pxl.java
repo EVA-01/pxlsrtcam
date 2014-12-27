@@ -7,33 +7,13 @@ public class Pxl implements Comparable<Pxl>{
     private String mode;
     private double[] avg;
     private boolean reverse;
-    public Pxl(int o, String mode, boolean reverse, double[] avg) {
-        color = new Color(o);
-        this.mode = mode;
-        this.reverse = reverse;
-        this.avg = avg;
-    }
-    public Pxl(Color o, String mode, boolean reverse, double[] avg) {
-        color = o;
-        this.mode = mode;
-        this.reverse = reverse;
-        this.avg = avg;
-    }
-    public Pxl(int o, String mode, boolean reverse) {
-        color = new Color(o);
-        this.mode = mode;
-        this.reverse = reverse;
-    }
-    public Pxl(Color o, String mode, boolean reverse) {
-        color = o;
-        this.mode = mode;
-        this.reverse = reverse;
-    }
-    public Pxl(Color o) {
-        color = o;
-    }
+    private double sobel;
     public Pxl(int o) {
         color = new Color(o);
+    }
+    public Pxl(int o, double s) {
+        color = new Color(o);
+        sobel = s;
     }
     public void mode(String mode) {
         this.mode = mode;
@@ -46,6 +26,15 @@ public class Pxl implements Comparable<Pxl>{
     }
     public Color color() {
         return color;
+    }
+    public double grey() {
+        return (color.getRed() * 0.2126 + color.getGreen() * 0.7152 + color.getBlue() * 0.0722) / 3.0;
+    }
+    public void sobel(double s) {
+        sobel = s;
+    }
+    public double sobel() {
+        return sobel;
     }
     public float hue() {
         return Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null)[0];

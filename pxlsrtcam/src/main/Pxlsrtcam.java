@@ -46,44 +46,57 @@ public class Pxlsrtcam {
         "saturation",
         "brightness",
         "luma",
-        "sum-hsb"
+        "sum-hsb",
+        "none"
     };
     public static boolean tORf() {
         boolean[] tf = {true, false};
         return tf[(int)Math.floor(Math.random() * 2)];
     }
     public static BufferedImage randomPxlsrt(BufferedImage img) {
-        Pxlsrt brute = new Pxlsrt(img);
-        String direction = directions[(int) Math.floor(Math.random() * directions.length)];
         String method = methods[(int) Math.floor(Math.random() * methods.length)];
+        if(method.equals("none")){
+            return img;
+        }
+        String direction = directions[(int) Math.floor(Math.random() * directions.length)];
         boolean reverse = tORf();
         boolean middlate = tORf();
-        boolean full = tORf();
-        int min;
-        int max;
-        int length;
-        switch (direction) {
-            case "horizontal":
-                // horizontal
-                length = brute.width();
-                break;
-            case "vertical":
-                // vertical
-                length = brute.height();
-            default:
-                // diagonal
-                length = Math.min(brute.width(), brute.height());
-                break;
-        }
-        if(!full) {
-            min = (int) Math.floor(Math.random() * length) + 1;
-            max = (int) Math.floor(Math.random() * length) + 1;
+        boolean bruteMode = tORf();
+        if(bruteMode) {
+            boolean full = tORf();
+            int min;
+            int max;
+            int length;
+            Pxlsrt brute = new Pxlsrt(img);
+            switch (direction) {
+                case "horizontal":
+                    // horizontal
+                    length = brute.width();
+                    break;
+                case "vertical":
+                    // vertical
+                    length = brute.height();
+                default:
+                    // diagonal
+                    length = Math.min(brute.width(), brute.height());
+                    break;
+            }
+            if(!full) {
+                min = (int) Math.floor(Math.random() * length) + 1;
+                max = (int) Math.floor(Math.random() * length) + 1;
+            } else {
+                min = length;
+                max = length;
+            }
+            brute.brute(min, max, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
+            return brute.modified();
         } else {
-            min = length;
-            max = length;
+            boolean absolute = tORf();
+            double threshold = Pxlsrt.randomInRange(20, 100);
+            Pxlsrt smart = new Pxlsrt(img);
+            smart.smart(threshold, absolute, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
+            return smart.modified();
         }
-        brute.brute(min, max, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
-        return brute.modified();
     }
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting");
