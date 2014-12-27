@@ -57,6 +57,7 @@ public class Pxlsrtcam {
         String direction = directions[(int) Math.floor(Math.random() * directions.length)];
         String method = methods[(int) Math.floor(Math.random() * methods.length)];
         boolean reverse = tORf();
+        boolean middlate = tORf();
         boolean full = tORf();
         int min;
         int max;
@@ -81,7 +82,7 @@ public class Pxlsrtcam {
             min = length;
             max = length;
         }
-        brute.brute(min, max, direction, method, reverse, 0);
+        brute.brute(min, max, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
         return brute.modified();
     }
     public static void main(String[] args) throws IOException, InterruptedException {
