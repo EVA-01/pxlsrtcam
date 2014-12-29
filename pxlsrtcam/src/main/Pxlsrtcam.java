@@ -47,22 +47,28 @@ public class Pxlsrtcam {
         "brightness",
         "luma",
         "sum-hsb",
+        "uniqueness",
         "none"
+    };
+    private final static String[] modes = {
+        "smart",
+        "brute",
+        "kim"
     };
     public static boolean tORf() {
         boolean[] tf = {true, false};
         return tf[(int)Math.floor(Math.random() * 2)];
     }
     public static BufferedImage randomPxlsrt(BufferedImage img) {
-        String method = methods[(int) Math.floor(Math.random() * methods.length)];
+        String method = Pxlsrt.randomInArray(methods);
         if(method.equals("none")){
             return img;
         }
-        String direction = directions[(int) Math.floor(Math.random() * directions.length)];
+        String direction = Pxlsrt.randomInArray(directions);
         boolean reverse = tORf();
         boolean middlate = tORf();
-        boolean bruteMode = tORf();
-        if(bruteMode) {
+        String mode = Pxlsrt.randomInArray(modes);
+        if("brute".equals(mode)) {
             boolean full = tORf();
             int min;
             int max;
@@ -82,20 +88,25 @@ public class Pxlsrtcam {
                     break;
             }
             if(!full) {
-                min = (int) Math.floor(Math.random() * length) + 1;
-                max = (int) Math.floor(Math.random() * length) + 1;
+                min = Pxlsrt.randomInRange(1, length);
+                max = Pxlsrt.randomInRange(1, length);
             } else {
                 min = length;
                 max = length;
             }
             brute.brute(min, max, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
             return brute.modified();
-        } else {
+        } else if("smart".equals(mode)) {
             boolean absolute = tORf();
             double threshold = Pxlsrt.randomInRange(20, 100);
             Pxlsrt smart = new Pxlsrt(img);
             smart.smart(threshold, absolute, direction, method, reverse, (middlate ? Pxlsrt.randomInRange(-10, 10) : 0));
             return smart.modified();
+        } else {
+            String[] kimMethods = {"black", "brightness", "white"};
+            Pxlsrt kim = new Pxlsrt(img);
+            kim.kim(Pxlsrt.randomInArray(kimMethods));
+            return kim.modified();
         }
     }
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -131,7 +142,7 @@ public class Pxlsrtcam {
         // Max amount of seconds until program quits
         double maxSeconds = 60;
         long start = System.nanoTime();
-        while((System.nanoTime()  - start) / 1000000000.0 < maxSeconds) {
+        while((System.nanoTime() - start) / 1000000000.0 < maxSeconds) {
         // Or run indefinitely
         //while(true) {
             BufferedImage image = webcam.getImage();

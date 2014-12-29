@@ -4,7 +4,7 @@ import java.awt.Color;
 
 public class Pxl implements Comparable<Pxl>{
     private Color color;
-    private String mode;
+    private String method;
     private double[] avg;
     private boolean reverse;
     private double sobel;
@@ -15,8 +15,11 @@ public class Pxl implements Comparable<Pxl>{
         color = new Color(o);
         sobel = s;
     }
-    public void mode(String mode) {
-        this.mode = mode;
+    public void method(String mode) {
+        this.method = mode;
+    }
+    public String method() {
+        return method;
     }
     public void reverse(boolean reverse) {
         this.reverse = reverse;
@@ -24,11 +27,14 @@ public class Pxl implements Comparable<Pxl>{
     public void avg(double[] avg) {
         this.avg = avg;
     }
+    public double[] avg() {
+        return avg;
+    }
     public Color color() {
         return color;
     }
     public double grey() {
-        return (color.getRed() * 0.2126 + color.getGreen() * 0.7152 + color.getBlue() * 0.0722) / 3.0;
+        return (red() * 0.2126 + green() * 0.7152 + blue() * 0.0722) / 3.0;
     }
     public void sobel(double s) {
         sobel = s;
@@ -37,33 +43,42 @@ public class Pxl implements Comparable<Pxl>{
         return sobel;
     }
     public float hue() {
-        return Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null)[0];
+        return Color.RGBtoHSB(red(), green(), blue(), null)[0];
     }
     public float saturation() {
-        return Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null)[1];
+        return Color.RGBtoHSB(red(), green(), blue(), null)[1];
     }
     public float brightness() {
-        return Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null)[2];
+        return Color.RGBtoHSB(red(), green(), blue(), null)[2];
+    }
+    public int red() {
+        return color.getRed();
+    }
+    public int green() {
+        return color.getGreen();
+    }
+    public int blue() {
+        return color.getBlue();
     }
     public double uniqueness() {
-        return Math.sqrt(Math.pow(color.getRed() - avg[0], 2) + Math.pow(color.getGreen() - avg[1], 2) + Math.pow(color.getBlue() - avg[2], 2));
+        return Math.sqrt(Math.pow(red() - avg[0], 2) + Math.pow(green() - avg[1], 2) + Math.pow(blue() - avg[2], 2));
     }
     @Override
     public int compareTo(Pxl o) {
         double v1;
         double v2;
-        switch(mode) {
+        switch(method) {
             case "red":
-                v1 = color.getRed();
-                v2 = o.color().getRed();
+                v1 = red();
+                v2 = o.red();
             break;
             case "green":
-                v1 = color.getGreen();
-                v2 = o.color().getGreen();
+                v1 = green();
+                v2 = o.green();
             break;
             case "blue":
-                v1 = color.getBlue();
-                v2 = o.color().getBlue();
+                v1 = blue();
+                v2 = o.blue();
             break;
             case "hue":
                 v1 = hue();
@@ -82,28 +97,28 @@ public class Pxl implements Comparable<Pxl>{
                 v2 = o.hue() / 360.0 + o.saturation() + o.brightness();
             break;
             case "luma":
-                v1 = color.getRed() * 0.2126 + color.getGreen() * 0.7152 + color.getBlue() * 0.0722;
-                v2 = o.color().getRed() * 0.2126 + o.color().getGreen() * 0.7152 + o.color().getBlue() * 0.0722;
+                v1 = red() * 0.2126 + green() * 0.7152 + blue() * 0.0722;
+                v2 = o.red() * 0.2126 + o.green() * 0.7152 + o.blue() * 0.0722;
             break;
             case "magenta":
-                v1 = color.getRed() + color.getBlue();
-                v2 = o.color().getRed() + o.color().getBlue();
+                v1 = red() + blue();
+                v2 = o.red() + o.blue();
             break;
             case "cyan":
-                v1 = color.getGreen() + color.getBlue();
-                v2 = o.color().getGreen() + o.color().getBlue();
+                v1 = green() + blue();
+                v2 = o.green() + o.blue();
             break;
             case "yellow":
-                v1 = color.getRed() + color.getGreen();
-                v2 = o.color().getRed() + o.color().getGreen();
+                v1 = red() + green();
+                v2 = o.red() + o.green();
             break;
             case "uniqueness":
                 v1 = uniqueness();
                 v2 = o.uniqueness();
             break;
             default:
-                v1 = color.getRed() + color.getGreen() + color.getBlue();
-                v2 = o.color().getRed() + o.color().getGreen() + o.color().getBlue();
+                v1 = red() + green() + blue();
+                v2 = o.red() + o.green() + o.blue();
             break;
         }
         if(reverse) {

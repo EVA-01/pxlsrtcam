@@ -1,5 +1,6 @@
 package main;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
@@ -55,7 +56,7 @@ public class Pxlsrt {
         for(int y = 0; y < height(); y++) {
             for(int x = 0; x < width(); x++) {
                 rows[y][x] = pxl(x, y);
-                rows[y][x].mode(method);
+                rows[y][x].method(method);
                 rows[y][x].reverse(reverse);
             }
         }
@@ -66,7 +67,7 @@ public class Pxlsrt {
         for(int x = 0; x < width(); x++) {
             for(int y = 0; y < height(); y++) {
                 columns[x][y] = pxl(x, y);
-                columns[x][y].mode(method);
+                columns[x][y].method(method);
                 columns[x][y].reverse(reverse);
             }
         }
@@ -77,7 +78,7 @@ public class Pxlsrt {
         for(int x = 0; x < width(); x++) {
             for(int y = 0; y < height(); y++) {
                 all[x + y * width()] = pxl(x, y);
-                all[x + y * width()].mode(method);
+                all[x + y * width()].method(method);
                 all[x + y * width()].reverse(reverse);
             }
         }
@@ -112,7 +113,7 @@ public class Pxlsrt {
             int i = 0;
             while(i < length) {
                 line[i] = pxl(x, y);
-                line[i].mode(method);
+                line[i].method(method);
                 line[i].reverse(reverse);
                 x--;
                 y++;
@@ -152,7 +153,7 @@ public class Pxlsrt {
             int i = 0;
             while(i < length) {
                 line[i] = pxl(x, y);
-                line[i].mode(method);
+                line[i].method(method);
                 line[i].reverse(reverse);
                 x++;
                 y++;
@@ -276,7 +277,27 @@ public class Pxlsrt {
         }
         return nu;
     }
+    public static void average(Pxl[] band) {
+        double[] avg = {0, 0, 0};
+        for(int p = 0; p < band.length; p++) {
+            avg[0] += band[p].red();
+            avg[1] += band[p].green();
+            avg[2] += band[p].blue();
+        }
+        avg[0] /= (double)band.length;
+        avg[1] /= (double)band.length;
+        avg[2] /= (double)band.length;
+        for(int p = 0; p < band.length; p++) {
+            band[p].avg(avg);
+        }
+    }
     public Pxl[] srt(Pxl[] band, int middlate) {
+        if(band.length < 1) {
+            return band;
+        }
+        if("uniqueness".equals(band[0].method())) {
+            average(band);
+        }
         Arrays.sort(band);
         return middlate(band, middlate);
     }
@@ -435,6 +456,237 @@ public class Pxlsrt {
             }
         }
     }
+    public int getFirstNotBlackY(int x, int y, int value) {
+        if (y < height()) {
+            while (get(x, y) < value) {
+                y++;
+                if (y >= height()) {
+                    return -1;
+                }
+            }
+        }
+        return y;
+    }
+    public int getFirstNotBlackX(int x, int y, int value) {
+        if(x < width()) {
+            while (get(x, y) < value) {
+                x++;
+                if (x >= width()) {
+                    return -1;
+                }
+            }
+        }
+        return x;
+    }
+    public int getNextBlackY(int x, int y, int value) {
+        y += 1;
+        if (y < height()) {
+            while (get(x, y) > value) {
+                y++;
+                if (y >= height()) {
+                    return height() - 1;
+                }
+            }
+        }
+        return y - 1;
+    }
+    public int getNextBlackX(int x, int y, int value) {
+        x += 1;
+        if(x < width()) {
+            while (get(x, y) > value) {
+                x++;
+                if (x >= width()) {
+                    return width() - 1;
+                }
+            }
+        }
+        return x - 1;
+    }
+    public int getFirstBrightY(int x, int y, int value) {
+        if (y < height()) {
+            while (pxl(x, y).brightness() * 255 < value) {
+                y++;
+                if (y >= height()) {
+                    return -1;
+                }
+            }
+        }
+        return y;
+    }
+    public int getFirstBrightX(int x, int y, int value) {
+        if(x < width()) {
+            while (pxl(x, y).brightness() * 255 < value) {
+                x++;
+                if (x >= width()) {
+                    return -1;
+                }
+            }
+        }
+        return x;
+    }
+    public int getNextDarkY(int x, int y, int value) {
+        y += 1;
+        if (y < height()) {
+            while (pxl(x, y).brightness() * 255 > value) {
+                y++;
+                if (y >= height()) {
+                    return height() - 1;
+                }
+            }
+        }
+        return y - 1;
+    }
+    public int getNextDarkX(int x, int y, int value) {
+        x += 1;
+        if(x < width()) {
+            while (pxl(x, y).brightness() * 255 > value) {
+                x++;
+                if (x >= width()) {
+                    return width() - 1;
+                }
+            }
+        }
+        return x - 1;
+    }
+    public int getFirstNotWhiteY(int x, int y, int value) {
+        if (y < height()) {
+            while (get(x, y) > value) {
+                y++;
+                if (y >= height()) {
+                    return -1;
+                }
+            }
+        }
+        return y;
+    }
+    public int getNextWhiteY(int x, int y, int value) {
+        y += 1;
+        if (y < height()) {
+            while (get(x, y) < value) {
+                y++;
+                if (y >= height()) {
+                    return height() - 1;
+                }
+            }
+        }
+        return y - 1;
+    }
+    public int getFirstNotWhiteX(int x, int y, int value) {
+        if(x < width()) {
+            while (get(x, y) > value) {
+                x++;
+                if (x >= width()) {
+                    return -1;
+                }
+            }
+        }
+        return x;
+    }
+    public int getNextWhiteX(int x, int y, int value) {
+        x += 1;
+        if(x < width()) {
+            while(get(x, y) < value) {
+                x++;
+                if (x >= width()) {
+                    return width() - 1;
+                }
+            }
+        }
+        return x - 1;
+    }
+    public int get(int x, int y) {
+        return modified.getRGB(x, y);
+    }
+    public void set(int x, int y, int c) {
+        modified.setRGB(x, y, c);
+    }
+    public void kim(String method) {
+        switch(method) {
+            case "black":
+                kim(method, (new Color(11, 220, 0)).getRGB());
+            break;
+            case "brightness":
+                kim(method, 60);
+            break;
+            case "white":
+                kim(method, (new Color(57, 167, 192)).getRGB());
+            break;
+        }
+    }
+    public void kim(String method, int value) {
+        int column = 0;
+        int row = 0;
+        while(column < width()) {
+            int x = column;
+            int y = 0;
+            int yend = 0;
+            while(yend < height()) {
+                switch(method) {
+                    case "black":
+                        y = getFirstNotBlackY(x, y, value);
+                        yend = getNextBlackY(x, y, value);
+                    break;
+                    case "brightness":
+                        y = getFirstBrightY(x, y, value);
+                        yend = getNextDarkY(x, y, value);
+                    break;
+                    case "white":
+                        y = getFirstNotWhiteY(x, y, value);
+                        yend = getNextWhiteY(x, y, value);
+                    break;
+                }
+                if(y < 0) {
+                    break;
+                }
+                int sortLength = yend - y;
+                int[] unsorted = new int[sortLength];
+                for(int i = 0; i < sortLength; i++) {
+                    unsorted[i] = get(x, y + i);
+                }
+                Arrays.sort(unsorted);
+                for(int i = 0; i < sortLength; i++) {
+                    set(x, y + i, unsorted[i]);
+                }
+                y = yend + 1;
+            }
+            column++;
+        }
+        while(row < height()) {
+            int x = 0;
+            int y = row;
+            int xend = 0;
+            while(xend < width()) {
+                switch(method) {
+                    case "black":
+                        x = getFirstNotBlackX(x, y, value);
+                        xend = getNextBlackX(x, y, value);
+                    break;
+                    case "brightness":
+                        x = getFirstBrightX(x, y, value);
+                        xend = getNextDarkX(x, y, value);
+                    break;
+                    case "white":
+                        x = getFirstNotWhiteX(x, y, value);
+                        xend = getNextWhiteX(x, y, value);
+                    break;
+                }
+                if(x < 0) {
+                    break;
+                }
+                int sortLength = xend - x;
+                int[] unsorted = new int[sortLength];
+                for(int i = 0; i < sortLength; i++) {
+                    unsorted[i] = get(x + i, y);
+                }
+                Arrays.sort(unsorted);
+                for(int i = 0; i < sortLength; i++) {
+                    set(x + i, y, unsorted[i]);
+                }
+                x = xend + 1;
+            }
+            row++;
+        }
+    }
     public static <T> T[] concatenate(T[] a, T[] b) {
         if(a.length == 0) {
             return b;
@@ -451,6 +703,9 @@ public class Pxlsrt {
             c[k] = b[i];
         }
         return c;
+    }
+    public static <T> T randomInArray(T[] a) {
+        return a[randomInRange(0, a.length - 1)];
     }
     /* http://stackoverflow.com/questions/3514158/how-do-you-clone-a-bufferedimage */
     public static BufferedImage deepCopy(BufferedImage bi) {
